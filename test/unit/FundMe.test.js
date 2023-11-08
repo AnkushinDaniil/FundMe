@@ -105,5 +105,12 @@ describe("FundMe", async () => {
                 )
             }
         })
+        it("Only allows the owner to withdraw", async () => {
+            const accounts = await ethers.getSigners()
+            const attackerConnectedContract = await fundMe.connect(accounts[1])
+            await expect(
+                attackerConnectedContract.withdraw()
+            ).to.be.revertedWithCustomError(fundMe, "FundMe__NotOwner")
+        })
     })
 })
