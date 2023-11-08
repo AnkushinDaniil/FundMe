@@ -5,6 +5,7 @@ describe("FundMe", async () => {
     let fundMe
     let deployer
     let mockV3Aggregator
+    const exampleValue = ethers.parseEther("1.0")
     beforeEach(async () => {
         // const accounts = await ethers.getSigners()
         // const accountZero = accounts[0]
@@ -29,5 +30,46 @@ describe("FundMe", async () => {
                 "FundMe__InsufficientFunding"
             )
         })
+        it("Updated the amount funded data structure", async () => {
+            await fundMe.fund({ value: exampleValue })
+            const responce = await fundMe.addressToAmountFunded(deployer)
+            assert.equal(responce, exampleValue)
+        })
+        it("Adds funders to array of funders", async () => {
+            await fundMe.fund({ value: exampleValue })
+            const funder = await fundMe.funders(0)
+            assert.equal(funder, deployer)
+        })
+    })
+    describe("withdraw", async () => {
+        beforeEach(async () => {
+            await fundMe.fund({ value: exampleValue })
+        })
+        it("withdraw ETH from a single founder", async () => {
+            const startingFundMeBalasnce = await ethers.provider.getBalance(
+                fundMe.target
+            )
+            const startingDeployerBalance = await ethers.provider.getBalance(
+                deployer
+            )
+            const transactionResponse = await fundMe.withdraw()
+            const transactionReceipt = await transactionResponse.wait(1)
+            const { gasPrice, gasUsed } = transactionReceipt
+            const gasCost = gasUsed * gasPrice
+            const endingFundMeBalance = await ethers.provider.getBalance(
+                fundMe.target
+            )
+            const endingDeployerBalance = await ethers.provider.getBalance(
+                deployer
+            )
+            assert.equal(endingFundMeBalance, 0)
+            assert.equal(
+                startingFundMeBalasnce + startingDeployerBalance,
+                endingDeployerBalance + gasCost
+            )
+        })
+        // it("Allows us to withdraw with multiple funders", async () => {
+
+        // })
     })
 })
