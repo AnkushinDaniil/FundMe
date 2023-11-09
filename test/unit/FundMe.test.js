@@ -32,12 +32,12 @@ describe("FundMe", async () => {
         })
         it("Updated the amount funded data structure", async () => {
             await fundMe.fund({ value: exampleValue })
-            const responce = await fundMe.addressToAmountFunded(deployer)
+            const responce = await fundMe.getAddressToAmountFunded(deployer)
             assert.equal(responce, exampleValue)
         })
-        it("Adds funders to array of funders", async () => {
+        it("Adds funder to array of funders", async () => {
             await fundMe.fund({ value: exampleValue })
-            const funder = await fundMe.funders(0)
+            const funder = await fundMe.getFunder(0)
             assert.equal(funder, deployer)
         })
     })
@@ -97,10 +97,10 @@ describe("FundMe", async () => {
                 endingDeployerBalance + gasCost
             )
             // Zeroing out the list of investors
-            await expect(fundMe.funders(0)).to.be.reverted
+            await expect(fundMe.getFunder(0)).to.be.reverted
             for (const account of accounts) {
                 assert.equal(
-                    await fundMe.addressToAmountFunded(account.address),
+                    await fundMe.getAddressToAmountFunded(account.address),
                     0
                 )
             }

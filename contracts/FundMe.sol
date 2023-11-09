@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
@@ -19,10 +18,10 @@ contract FundMe {
 
     uint256 public constant MINIMUM_USD = 50 * 1e18;
 
-    address[] public funders;
-    mapping(address => uint256) public addressToAmountFunded;
+    address[] private s_funders;
+    mapping(address => uint256) private s_addressToAmountFunded;
     AggregatorV3Interface private s_priceFeed;
-    address public immutable i_owner;
+    address private immutable i_owner;
 
     modifier onlyOwner() {
         // require(msg.sender == i_owner, "Sender is not owner");
@@ -32,8 +31,8 @@ contract FundMe {
         _;
     }
 
-    constructor(address priceFeed) {
-        s_priceFeed = AggregatorV3Interface(priceFeed);
+    constructor(address _priceFeed) {
+        s_priceFeed = AggregatorV3Interface(_priceFeed);
         i_owner = msg.sender;
     }
 
@@ -53,21 +52,21 @@ contract FundMe {
         if (msg.value.getConversionRate(s_priceFeed) < MINIMUM_USD) {
             revert FundMe__InsufficientFunding();
         }
-        funders.push(msg.sender);
-        addressToAmountFunded[msg.sender] += msg.value;
+        s_funders.push(msg.sender);
+        s_addressToAmountFunded[msg.sender] += msg.value;
     }
 
-    function withdraw() public onlyOwner {
+    function withdraw() public payable onlyOwner {
+        address[] memory funders = s_funders;
         for (
             uint256 funderIndex = 0;
             funderIndex < funders.length;
             funderIndex++
         ) {
             address funder = funders[funderIndex];
-            addressToAmountFunded[funder] = 0;
+            s_addressToAmountFunded[funder] = 0;
         }
-
-        funders = new address[](0);
+        s_funders = new address[](0);
         (bool callSuccess, ) = payable(msg.sender).call{
             value: address(this).balance
         }("");
@@ -75,5 +74,23 @@ contract FundMe {
         if (!callSuccess) {
             revert FundMe__CallFailed();
         }
+    }
+
+    function getOwner() public view returns (address) {
+        return i_owner;
+    }
+
+    function getFunder(uint256 _funderIndex) public view returns (address) {
+        return s_funders[_funderIndex];
+    }
+
+    function getAddressToAmountFunded(
+        address _funder
+    ) public view returns (uint256) {
+        return s_addressToAmountFunded[_funder];
+    }
+
+    function getPriceFeed() public view returns (AggregatorV3Interface) {
+        return s_priceFeed;
     }
 }
