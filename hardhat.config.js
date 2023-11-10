@@ -1,11 +1,11 @@
 require("@nomicfoundation/hardhat-chai-matchers")
 require("hardhat-gas-reporter")
-// require("@nomiclabs/hardhat-etherscan")
 require("dotenv").config()
 require("solidity-coverage")
 require("@nomicfoundation/hardhat-ethers")
 require("hardhat-deploy")
 require("hardhat-deploy-ethers")
+require("@nomiclabs/hardhat-etherscan")
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 /**
@@ -26,7 +26,6 @@ module.exports = {
     networks: {
         hardhat: {
             chainId: 31337,
-            // gasPrice: 130000000000,
         },
         sepolia: {
             url: SEPOLIA_RPC_URL,
